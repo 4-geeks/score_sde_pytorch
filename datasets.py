@@ -150,11 +150,13 @@ def get_dataset(config, uniform_dequantization=False, evaluation=False):
   if config.data.dataset in ['FFHQ', 'CelebAHQ']:
     def preprocess_fn(d):
       sample = tf.io.parse_single_example(d, features={
-        'shape': tf.io.FixedLenFeature([3], tf.int64),
+        'height': tf.io.FixedLenFeature([], tf.int64),
+        'width': tf.io.FixedLenFeature([], tf.int64),
+        'depth': tf.io.FixedLenFeature([], tf.int64),
         'data': tf.io.FixedLenFeature([], tf.string)})
-      data = tf.io.decode_raw(sample['data'], tf.uint8)
-      data = tf.reshape(data, sample['shape'])
-      data = tf.transpose(data, (1, 2, 0))
+      data = tf.io.decode_jpeg(sample['data'], 3)
+      data = tf.reshape(data, (sample['height'],sample['width'],sample['depth']))
+      # data = tf.transpose(data, (1, 2, 0))
       img = tf.image.convert_image_dtype(data, tf.float32)
       if config.data.random_flip and not evaluation:
         img = tf.image.random_flip_left_right(img)
